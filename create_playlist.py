@@ -38,8 +38,23 @@ print(all_weekly_playlist_tracks)
 print(len(all_weekly_playlist_tracks))
 
 # Create playlist
-new_playlist = sp.user_playlist_create(user=user_id, name=f"New playlist", public=True, collaborative=False, description="Created by Spotipy.")
+playlists = sp.current_user_playlists()
+new_playlist = {}
+found = False
+print(type(playlists))
+print(playlists.keys())
+for playlist in playlists["items"]:
+    print(playlist["name"])
+    if playlist["name"] == "New playlist":
+        found = True
+        break
 
+if not found:
+    new_playlist = sp.user_playlist_create(user=user_id, name=f"New playlist", public=True, collaborative=False,
+                                           description="Created by Spotipy.")
+
+# new_playlist_id = new_playlist["id"]
+print(new_playlist)
 # Add songs to the new playlist
 add_songs = sp.playlist_add_items(playlist_id=new_playlist["id"], items=all_weekly_playlist_tracks)
 
