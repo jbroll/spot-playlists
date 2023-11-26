@@ -37,8 +37,8 @@ def view_user_playlists():
     print()
 
 
-def view_user_saved_tracks(amount=10):
-    user_current_saved_tracks = sp.current_user_saved_tracks(limit=10)
+def view_user_saved_tracks(amount):
+    user_current_saved_tracks = sp.current_user_saved_tracks()
     print("--User Current Saved Tracks--")
     print(f"First {amount} current saved tracks")
     for i in range(len(user_current_saved_tracks["items"][:amount])):
@@ -53,11 +53,54 @@ def view_user_saved_tracks(amount=10):
 def view_weekly_discovery_tracks():
     weekly_playlist_url = "https://open.spotify.com/playlist/37i9dQZEVXcSl5JcFboUlo?si=105e91e417bc41a0"
     weekly_playlist = sp.playlist(playlist_id=weekly_playlist_url)
-
+    print("---Discover Weekly Tracks---")
     for track in weekly_playlist["tracks"]["items"]:
+        print("Track's name:", track["track"]["name"])
+        print("Artist:", track["track"]["artists"][0]["name"])
+        print("Track's ID:", track["track"]["id"])
+        print("*")
+    print()
+
+
+def view_day_list_tracks():
+    day_list_url = "https://open.spotify.com/playlist/37i9dQZF1EP6YuccBxUcC1?si=e772f4d4e4c547f4"
+    day_list_playlist = sp.playlist(playlist_id=day_list_url)
+    print("---Current Day List Tracks---")
+    for track in day_list_playlist["tracks"]["items"]:
         track_info = track["track"]
         print("Name:", track_info["name"])
         print("Artist:", track_info["artists"][0]["name"])
         print("Album:", track_info["album"]["name"])
         print("*")
     print()
+
+
+def create_playlist(name, description=""):
+    user = sp.current_user()
+    # Make sure there's no duplicated playlist name
+    user_playlists = sp.current_user_playlists()
+    for playlist in user_playlists["items"]:
+        if playlist["name"] == name:
+            print("Playlist name already exists. Please choose another one")
+            return
+    new_playlist = sp.user_playlist_create(user=user["id"], name=name, public=True, collaborative=False, description=description)
+    print(f"Playlist {name} has been created")
+
+
+def add_songs_to_playlist(playlist_id, items):
+    playlist = sp.playlist_add_items(playlist_id=playlist_id, items=items)
+    print(f"Songs have been added to the playlist.")
+
+
+def add_songs_from_daylist_playlist(playlist_id):
+    daylist_url = "https://open.spotify.com/playlist/37i9dQZF1EP6YuccBxUcC1?si=f5d4859eafbd461c"
+    daylist_tracks = sp.playlist_items(playlist_id=daylist_url)
+
+    # Get Day List's tracks' ID
+    tracks_id = []
+    for track in daylist_tracks["items"]:
+        tracks_id.append(track["track"]["id"])
+
+    # Add Day List's tracks to the given playlist
+    playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
+    print("All songs from current Day List Playlist have been added.")
