@@ -32,7 +32,7 @@ git clone https://github.com/quynhnle135/automate-weekly-discovery-spotify.git
 
 - Install required packages
 ```commandline
-pip install -r requiremetns.txt
+pip install -r requirements.txt
 ```
 
 ### Configuration
