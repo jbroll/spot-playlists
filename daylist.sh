@@ -1,0 +1,1 @@
+python3 main.py -ad "https://open.spotify.com/playlist/7r0pLxnAv22CNKHitOdNeT"

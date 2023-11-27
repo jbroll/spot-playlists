@@ -104,3 +104,17 @@ def add_songs_from_daylist_playlist(playlist_id):
     # Add Day List's tracks to the given playlist
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
     print("All songs from current Day List Playlist have been added.")
+
+
+def add_songs_from_weekly_playlist(playlist_id):
+    weekly_url = "https://open.spotify.com/playlist/37i9dQZEVXcSl5JcFboUlo"
+    weekly_tracks = sp.playlist_items(playlist_id=weekly_url)
+
+    # Get Discover Weekly's tracks' ID
+    tracks_id = []
+    for track in weekly_tracks["items"]:
+        tracks_id.append(track["track"]["id"])
+
+    # Add Discover Weekly's tracks to the give playlist
+    playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
+    print("All songs from this week Discover Weekly Playlist have been added.")
