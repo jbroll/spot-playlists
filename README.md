@@ -10,10 +10,10 @@ This project is a Python CLI (Command Line Interface) tool designed to interact 
 
 ## Features
 - View Playlist and Saved Tracks: Easily access your Spotify playlists and saved tracks with details.
-- Create Playlists: Create new playlists directly from the commandline
+- Create Playlists: Create new playlists directly from the commandline.
 - Add songs to Playlist: Add songs to your existing playlists with simple commands.
 - Automated Playlist updates:
-  - Every 4 hours, songs from user's **_Day List_** playlist are automatically added to a user-specified playlist.
+  - Every 3 hours, songs from user's **_Day List_** playlist are automatically added to a user-specified playlist.
   - Every Monday, songs from user's Discover Weekly playlist are added to another user-specified playlist.
 - Task Scheduling: Utilizes "crontab" for scheduling tasks like playlist updates. 
 
@@ -27,7 +27,7 @@ This project is a Python CLI (Command Line Interface) tool designed to interact 
 ### Installation
 - Clone the repository
 ```commandline
-git clone https://github.com/quynhnle135/automate-weekly-discovery-spotify.git
+git clone https://github.com/quynhnle135/automate-spotify-playlist.git
 ```
 
 - Install required packages
