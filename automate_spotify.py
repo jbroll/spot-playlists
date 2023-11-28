@@ -27,7 +27,7 @@ def view_user_info():
 
 def view_user_playlists():
     user_current_playlists = sp.current_user_playlists()
-    print("--User Current Playlists---")
+    print("--User Current Playlists--")
     for playlist in user_current_playlists["items"]:
         print("Playlist's name:", playlist["name"])
         print("Playlist's ID:", playlist["id"])
@@ -35,6 +35,7 @@ def view_user_playlists():
         print("Total tracks:", playlist["tracks"]["total"])
         print("*")
     print()
+    return user_current_playlists
 
 
 def view_user_saved_tracks(amount):
@@ -48,6 +49,7 @@ def view_user_saved_tracks(amount):
         print("Track's artist:", current_track["artists"][0]["name"])
         print("*")
     print()
+    return user_current_saved_tracks
 
 
 def view_weekly_discovery_tracks():
@@ -60,6 +62,7 @@ def view_weekly_discovery_tracks():
         print("Track's ID:", track["track"]["id"])
         print("*")
     print()
+    return weekly_playlist
 
 
 def view_day_list_tracks():
@@ -73,6 +76,7 @@ def view_day_list_tracks():
         print("Album:", track_info["album"]["name"])
         print("*")
     print()
+    return day_list_playlist
 
 
 def create_playlist(name, description=""):
@@ -85,11 +89,13 @@ def create_playlist(name, description=""):
             return
     new_playlist = sp.user_playlist_create(user=user["id"], name=name, public=True, collaborative=False, description=description)
     print(f"Playlist {name} has been created")
+    return new_playlist
 
 
 def add_songs_to_playlist(playlist_id, items):
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=items)
-    print(f"Songs have been added to the playlist.")
+    print("Songs have been added to the playlist.")
+    return playlist
 
 
 def add_songs_from_daylist_playlist(playlist_id):
@@ -104,6 +110,7 @@ def add_songs_from_daylist_playlist(playlist_id):
     # Add Day List's tracks to the given playlist
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
     print("All songs from current Day List Playlist have been added.")
+    return playlist
 
 
 def add_songs_from_weekly_playlist(playlist_id):
@@ -118,3 +125,4 @@ def add_songs_from_weekly_playlist(playlist_id):
     # Add Discover Weekly's tracks to the give playlist
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
     print("All songs from this week Discover Weekly Playlist have been added.")
+    return playlist
