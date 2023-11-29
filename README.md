@@ -3,6 +3,7 @@
 ## Introduction
 This project is a Python CLI (Command Line Interface) tool designed to interact with Spotipy's API using the Spotipy library. It allows users to view their playlists, saved tracks, create new playlists, and add songs to existing playlists.
 
+
 ## Technology:
 - Backend: Python, Argparse library, Spotipy library.
 - Task scheduler: Crontab.
@@ -16,7 +17,7 @@ This project is a Python CLI (Command Line Interface) tool designed to interact 
   - Every 3 hours, songs from user's **_Day List_** playlist are automatically added to a user-specified playlist.
   - Every Monday, songs from user's Discover Weekly playlist are added to another user-specified playlist.
 - Task Scheduling: Utilizes "crontab" for scheduling tasks like playlist updates. 
-
+- Find my playlist automated by this tool at <a href="https://open.spotify.com/playlist/67fRWrYNLNRQ4Z0az53tVH?si=deb261ee8dda4dd4">here</a>
 
 ## Getting Started
 
