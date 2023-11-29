@@ -78,6 +78,8 @@ options:
                         Add tracks from Day List to a specified playlist. Enter playlist's URL.
   -aw ADDWEEKLY, --addweekly ADDWEEKLY
                         Add tracks from Discover Weekly to a specified playlist. Enter playlist's URL.
+  -vp VIEWPLAYLIST, --viewplaylist VIEWPLAYLIST
+                        Display all tracks from the given playlist.
   -de DESCRIPTION, --description DESCRIPTION
                         Set a description for a new playlist being created.
   -so SONGS [SONGS ...], --songs SONGS [SONGS ...]
