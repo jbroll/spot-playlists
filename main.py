@@ -13,6 +13,7 @@ def main():
     parser.add_argument("-a", "--add", type=str, help="Add songs to an existing playlist. Enter playlist's URL.")
     parser.add_argument("-ad", "--adddaylist", type=str, help="Add tracks from Day List to a specified playlist. Enter playlist's URL.")
     parser.add_argument("-aw", "--addweekly", type=str, help="Add tracks from Discover Weekly to a specified playlist. Enter playlist's URL.")
+    parser.add_argument("-vp", "--viewplaylist", type=str, help="Display all tracks from the given playlist.")
 
     parser.add_argument("-de", "--description", type=str, help="Set a description for a new playlist being created.")
     parser.add_argument("-so", "--songs", type=str, nargs="+", help="Add a list of songs URLs to a specified playlist.")
@@ -46,6 +47,9 @@ def main():
     elif args.addweekly:
         print("*** Songs from Discover Weekly playlist have been added to your playlist ***")
         add_songs_from_weekly_playlist(args.addweekly)
+    elif args.viewplaylist:
+        print("*** Songs from the given playlist ***")
+        view_playlist_tracks(args.viewplaylist)
     else:
         print("Invalid command.")
 

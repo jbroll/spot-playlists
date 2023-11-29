@@ -126,3 +126,14 @@ def add_songs_from_weekly_playlist(playlist_id):
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=tracks_id)
     print("All songs from this week Discover Weekly Playlist have been added.")
     return playlist
+
+
+def view_playlist_tracks(playlist_id):
+    playlist_tracks = sp.playlist_items(playlist_id=playlist_id)
+    for tracks in playlist_tracks["items"]:
+        track = tracks["track"]
+        print("Name:", track["name"])
+        print("Album:", track["album"]["name"])
+        print("Artist:", track["artists"][0]["name"])
+        print("*")
+    return playlist_tracks

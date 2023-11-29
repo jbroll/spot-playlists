@@ -14,7 +14,7 @@ scope = ["user-library-read user-library-modify playlist-modify-public"]
 
 # Set up spotipy.client.Spotify object which is authenticated
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-print(type(sp))
+# print(type(sp))
 user = sp.current_user()
 # print(user)
 # print(type(user))
@@ -26,19 +26,26 @@ user = sp.current_user()
 # print(sp.user_playlist_create(user=user["id"], name="Test (2)", public=True, collaborative=False))
 # print(type(sp.user_playlist_create(user=user["id"], name="Test (2)", public=True, collaborative=False)))
 
-print(sp.playlist_add_items(playlist_id="https://open.spotify.com/playlist/0y2bGYwNakOcgcDz5YshQR?si=8b8fd34eff74406d",
-                            items=["https://open.spotify.com/track/5xEM5hIgJ1jjgcEBfpkt2F?si=16c439f41fd14283"]))
-print(type(sp.playlist_add_items(playlist_id="https://open.spotify.com/playlist/0y2bGYwNakOcgcDz5YshQR?si=8b8fd34eff74406d",
-                                 items=["https://open.spotify.com/track/5xEM5hIgJ1jjgcEBfpkt2F?si=16c439f41fd14283"])))
+# print(sp.playlist_add_items(playlist_id="https://open.spotify.com/playlist/0y2bGYwNakOcgcDz5YshQR?si=8b8fd34eff74406d",
+#                             items=["https://open.spotify.com/track/5xEM5hIgJ1jjgcEBfpkt2F?si=16c439f41fd14283"]))
+# print(type(sp.playlist_add_items(playlist_id="https://open.spotify.com/playlist/0y2bGYwNakOcgcDz5YshQR?si=8b8fd34eff74406d",
+#                                  items=["https://open.spotify.com/track/5xEM5hIgJ1jjgcEBfpkt2F?si=16c439f41fd14283"])))
 
 
 daylist_url = "https://open.spotify.com/playlist/37i9dQZF1EP6YuccBxUcC1?si=f5d4859eafbd461c"
 daylist_tracks = sp.playlist_items(playlist_id=daylist_url)
-print(daylist_tracks.get("items"))
-print(type(daylist_tracks))
 print(daylist_tracks.keys())
-print(type(daylist_tracks["items"][0].keys()))
 print(daylist_tracks["items"][0]["track"].keys())
+for tracks in daylist_tracks["items"]:
+    track = tracks["track"]
+    print(track["name"])
+    print(track["album"]["name"])
+    print(track["artists"][0]["name"])
+# print(daylist_tracks.get("items"))
+# print(type(daylist_tracks))
+# print(daylist_tracks.keys())
+# print(type(daylist_tracks["items"][0].keys()))
+# print(daylist_tracks["items"][0]["track"].keys())
 
 #
 # # Get User Playlist
