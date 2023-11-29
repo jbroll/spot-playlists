@@ -87,3 +87,45 @@ options:
                         Add a list of songs URLs to a specified playlist.
 
 ```
+
+### Spotify Playlist Management CLI Tool in Action
+
+- Display User's Information
+
+![spotify-2.png](screenshots%2Fspotify-2.png)
+
+- Display User's Playlists
+
+![spotify-3.png](screenshots%2Fspotify-3.png)
+
+- Display User's 5 current saved tracks
+
+![spotify-4.png](screenshots%2Fspotify-4.png)
+
+- Display all tracks from User's Discover Weekly playlist (curated by Spotify)
+
+![spotify-5.png](screenshots%2Fspotify-5.png)
+
+- Display all tracks from User's Day List playlist (curated by Spotify)
+
+![spotify-6.png](screenshots%2Fspotify-6.png)
+
+- Create new playlist
+
+![spotify-7.png](screenshots%2Fspotify-7.png)
+
+- Here's the empty playlist created from the above command line
+
+![spotify-8-playlist.png](screenshots%2Fspotify-8-playlist.png)
+
+- Add songs from Day List playlist to the playlist I've just created.
+
+![spotify-9.png](screenshots%2Fspotify-9.png)
+
+- Here's what the playlist looks like after addings songs from Day List
+
+![spotify-9-playlist.png](screenshots%2Fspotify-9-playlist.png)
+
+- Here's the playlist automated by this Spotify Playlist Management CLI took with scheduled task using Crontab, which is updated with songs from Day List every 3 hours.
+
+![spotify-result.png](screenshots%2Fspotify-result.png)
