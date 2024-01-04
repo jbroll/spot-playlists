@@ -1,10 +1,9 @@
 import os
 import spotipy
+from charset_normalizer.md import Optional
 from spotipy.oauth2 import SpotifyOAuth
-
-
-CLIENT_ID = "7777ac4f09a747a1ab0f0e1cef7a2323"
-CLIENT_SECRET = "11cf4026d8084e4ca99081bb8c2f93cd"
+from client_secrets import CLIENT_ID, CLIENT_SECRET
+from typing import Dict, List
 
 # Set up Authorization
 os.environ["SPOTIPY_CLIENT_ID"] = CLIENT_ID
@@ -16,7 +15,7 @@ scope = ["user-library-read user-library-modify playlist-modify-public"]
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
 
-def view_user_info():
+def view_user_info() -> Dict:
     user = sp.current_user()
     print("--User Info--")
     print("Name:", user["display_name"])
@@ -25,8 +24,11 @@ def view_user_info():
     return user
 
 
-def view_user_playlists():
+def view_user_playlists() -> Dict:
+    # Retrieve current user's playlists
     user_current_playlists = sp.current_user_playlists()
+
+    # Display user's playlists info
     print("--User Current Playlists--")
     for playlist in user_current_playlists["items"]:
         print("Playlist's name:", playlist["name"])
@@ -38,7 +40,7 @@ def view_user_playlists():
     return user_current_playlists
 
 
-def view_user_saved_tracks(amount):
+def view_user_saved_tracks(amount: int) -> Dict:
     user_current_saved_tracks = sp.current_user_saved_tracks()
     print("--User Current Saved Tracks--")
     print(f"First {amount} current saved tracks")
@@ -52,7 +54,7 @@ def view_user_saved_tracks(amount):
     return user_current_saved_tracks
 
 
-def view_weekly_discovery_tracks():
+def view_weekly_discovery_tracks() -> Dict:
     weekly_playlist_url = "https://open.spotify.com/playlist/37i9dQZEVXcSl5JcFboUlo?si=105e91e417bc41a0"
     weekly_playlist = sp.playlist(playlist_id=weekly_playlist_url)
     print("---Discover Weekly Tracks---")
@@ -65,7 +67,7 @@ def view_weekly_discovery_tracks():
     return weekly_playlist
 
 
-def view_day_list_tracks():
+def view_day_list_tracks() -> Dict:
     day_list_url = "https://open.spotify.com/playlist/37i9dQZF1EP6YuccBxUcC1?si=e772f4d4e4c547f4"
     day_list_playlist = sp.playlist(playlist_id=day_list_url)
     print("---Current Day List Tracks---")
@@ -79,26 +81,40 @@ def view_day_list_tracks():
     return day_list_playlist
 
 
-def create_playlist(name, description=""):
+def view_playlist_tracks(playlist_id: str) -> Dict:
+    playlist_tracks = sp.playlist_items(playlist_id=playlist_id)
+    for tracks in playlist_tracks["items"]:
+        track = tracks["track"]
+        print("Name:", track["name"])
+        print("Album:", track["album"]["name"])
+        print("Artist:", track["artists"][0]["name"])
+        print("*")
+    return playlist_tracks
+
+
+def create_playlist(name: str, description: str = "") -> Optional[Dict]:
     user = sp.current_user()
     # Make sure there's no duplicated playlist name
     user_playlists = sp.current_user_playlists()
     for playlist in user_playlists["items"]:
+        # Check for duplicated playlist's name
         if playlist["name"] == name:
             print("Playlist name already exists. Please choose another one")
             return
+
+    # Create new playlist
     new_playlist = sp.user_playlist_create(user=user["id"], name=name, public=True, collaborative=False, description=description)
     print(f"Playlist {name} has been created")
     return new_playlist
 
 
-def add_songs_to_playlist(playlist_id, items):
+def add_songs_to_playlist(playlist_id: str, items: List[str]) -> Dict:
     playlist = sp.playlist_add_items(playlist_id=playlist_id, items=items)
     print("Songs have been added to the playlist.")
     return playlist
 
 
-def add_songs_from_daylist_playlist(playlist_id):
+def add_songs_from_daylist_playlist(playlist_id) -> Dict:
     daylist_url = "https://open.spotify.com/playlist/37i9dQZF1EP6YuccBxUcC1?si=f5d4859eafbd461c"
     daylist_tracks = sp.playlist_items(playlist_id=daylist_url)
 
@@ -113,7 +129,7 @@ def add_songs_from_daylist_playlist(playlist_id):
     return playlist
 
 
-def add_songs_from_weekly_playlist(playlist_id):
+def add_songs_from_weekly_playlist(playlist_id) -> Dict:
     weekly_url = "https://open.spotify.com/playlist/37i9dQZEVXcSl5JcFboUlo"
     weekly_tracks = sp.playlist_items(playlist_id=weekly_url)
 
@@ -128,12 +144,3 @@ def add_songs_from_weekly_playlist(playlist_id):
     return playlist
 
 
-def view_playlist_tracks(playlist_id):
-    playlist_tracks = sp.playlist_items(playlist_id=playlist_id)
-    for tracks in playlist_tracks["items"]:
-        track = tracks["track"]
-        print("Name:", track["name"])
-        print("Album:", track["album"]["name"])
-        print("Artist:", track["artists"][0]["name"])
-        print("*")
-    return playlist_tracks
