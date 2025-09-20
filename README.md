@@ -6,6 +6,10 @@ with Spotify's API using the Spotipy library. It allows users to view their
 playlists, saved tracks, create new playlists, and add songs to existing
 playlists.
 
+## FORK : quynhnle135/automate-spotify-playlist
+This project was originally forked from https://github.com/quynhnle135/automate-spotify-playlist but is now
+quite different.
+
 ## Technology
 - Backend: Python, Argparse library, Spotipy library.
 - Task scheduler: Crontab (optional).
