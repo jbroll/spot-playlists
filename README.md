@@ -1,131 +1,99 @@
 # Spotify Playlist Manager
 
 ## Introduction
-This project is a Python CLI (Command Line Interface) tool designed to interact with Spotipy's API using the Spotipy library. It allows users to view their playlists, saved tracks, create new playlists, and add songs to existing playlists.
+This project is a Python CLI (Command Line Interface) tool designed to interact
+with Spotify's API using the Spotipy library. It allows users to view their
+playlists, saved tracks, create new playlists, and add songs to existing
+playlists.
 
-
-## Technology:
+## Technology
 - Backend: Python, Argparse library, Spotipy library.
-- Task scheduler: Crontab.
-
+- Task scheduler: Crontab (optional).
 
 ## Features
 - View Playlist and Saved Tracks: Easily access your Spotify playlists and saved tracks with details.
-- Create Playlists: Create new playlists directly from the commandline.
-- Add songs to Playlist: Add songs to your existing playlists with simple commands.
-- Automated Playlist updates:
-  - Every 3 hours, songs from user's **_Day List_** playlist are automatically added to a user-specified playlist.
-  - Every Monday, songs from user's Discover Weekly playlist are added to another user-specified playlist.
-- Task Scheduling: Utilizes "crontab" for scheduling tasks like playlist updates. 
-- Find my playlist automated by this tool at <a href="https://open.spotify.com/playlist/67fRWrYNLNRQ4Z0az53tVH?si=deb261ee8dda4dd4">here</a>
+- Create Playlists: Create new playlists directly from the command line.
+- Add Songs to Playlist: Add songs to your existing playlists with simple commands.
+- Automated Playlist Updates:
+  - Every 3 hours, songs from the user's **Day List** playlist can be automatically added to a user-specified playlist.
+  - Every Monday, songs from the user's Discover Weekly playlist can be added to another user-specified playlist.
+- Task Scheduling: Utilizes "crontab" for scheduling tasks like playlist updates.
 
 ## Getting Started
 
 ### Prerequisites
-- Python 3.11.0
-- Access to Spotify's API (requires Spotify developer account)
+- Python 3.11 or newer
+- Access to Spotify's API (requires a Spotify developer account)
 
 ### Installation
-- Clone the repository
-```commandline
-git clone https://github.com/quynhnle135/automate-spotify-playlist.git
-```
+1. Clone the repository:
 
-- Install required packages
-```commandline
-pip install -r requirements.txt
-```
+   ```bash
+   git clone https://github.com/quynhnle135/automate-spotify-playlist.git
+   ```
+
+2. Install required packages:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ### Configuration
-- Create Spotify's App at: https://developer.spotify.com/documentation/web-api/tutorials/getting-started#create-an-app
-- Get your CLIENT_ID and CLIENT_SECRET and update them in ```automate_spotify.py```
+1. Create a Spotify App at: [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)
+2. Obtain your `CLIENT_ID` and `CLIENT_SECRET`.
+3. Place these values in a shell-format file at `~/.spotify/spotify-auth`:
 
+   ```bash
+   $ cat ~/.spotify/spotify-auth
+   export SPOTIPY_CLIENT_ID=XxXxXxXxXxXxXxXxXxXxXxXxXxXxX
+   export SPOTIPY_CLIENT_SECRET=XxXxXxXxXxXxXxXxXxXxXxXxXxXxX
+   ```
 
-```python
-import os
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+4. The shell wrapper `spot.sh` sources the auth file before running the script.  We
+   use it to run the python script.
 
+   ```bash
+   cd ~/bin
+   ln -s $HOME/src/spot-playlists/spot.sh spot
+   ```
 
-CLIENT_ID = "your-client-id"
-CLIENT_SECRET = "your-client-secret"
+5. The CLI will automatically use these environment variables for authentication.
 
-# Set up Authorization
-os.environ["SPOTIPY_CLIENT_ID"] = CLIENT_ID
-os.environ["SPOTIPY_CLIENT_SECRET"] = CLIENT_SECRET
-os.environ["SPOTIPY_REDIRECT_URI"] = "http://localhost:9000"
-scope = ["user-library-read user-library-modify playlist-modify-public"]
+### Usage
+Show general help:
 
-# Set up spotipy.client.Spotify object which is authenticated
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+```bash
+spot -h
 ```
 
-## Usage
-```commandline
-A Python CLI tool for managing Spotify playlists and tracks.
+User commands:
 
-options:
-  -h, --help            show this help message and exit
-  -u, --user            Display the user's Spotify profile information.
-  -p, --playlists       List all playlists in the user's Spotify account.
-  -t TRACKS, --tracks TRACKS
-                        Display a specified number of saved tracks from the user's account.
-  -w, --weekly          Show the user's Discover Weekly playlist curated by Spotify.
-  -d, --daylist         Show the user's current Day List Playlist curated by Spotify.
-  -c CREATE, --create CREATE
-                        Create a new playlist. Playlist's name is required and description is optional.
-  -a ADD, --add ADD     Add songs to an existing playlist. Enter playlist's URL.
-  -ad ADDDAYLIST, --adddaylist ADDDAYLIST
-                        Add tracks from Day List to a specified playlist. Enter playlist's URL.
-  -aw ADDWEEKLY, --addweekly ADDWEEKLY
-                        Add tracks from Discover Weekly to a specified playlist. Enter playlist's URL.
-  -vp VIEWPLAYLIST, --viewplaylist VIEWPLAYLIST
-                        Display all tracks from the given playlist.
-  -de DESCRIPTION, --description DESCRIPTION
-                        Set a description for a new playlist being created.
-  -so SONGS [SONGS ...], --songs SONGS [SONGS ...]
-                        Add a list of songs URLs to a specified playlist.
-
+```bash
+spot user info
 ```
 
-### Spotify Playlist Management CLI Tool in Action
+Playlists commands:
 
-- Display User's Information
+```bash
+spot playlists list
+spot playlists create "My Playlist" -d "Optional description"
+spot playlists tracks "My Playlist"
+spot playlists add "My Playlist" "Dire Straits - Money For Nothing"
+spot playlists remove "My Playlist" "Dire Straits - Money For Nothing"
+```
 
-![spotify-2.png](screenshots%2Fspotify-2.png)
+Search tracks (supports stdin TSV with headers `artist` and `title` or `url`):
 
-- Display User's Playlists
+```bash
+cat my-songs.tsv | spot search -
+```
 
-![spotify-3.png](screenshots%2Fspotify-3.png)
+- All table outputs (playlists, tracks, search results) are printed in **tab-separated format** with lowercase headers.
+- Tracks can be specified as Spotify URLs, URIs, or in the format `<artist> - <title>`.
+- Using `-` as a song argument reads a table of songs from stdin for bulk operations.
 
-- Display User's 5 current saved tracks
-
-![spotify-4.png](screenshots%2Fspotify-4.png)
-
-- Display all tracks from User's Discover Weekly playlist (curated by Spotify)
-
-![spotify-5.png](screenshots%2Fspotify-5.png)
-
-- Display all tracks from User's Day List playlist (curated by Spotify)
-
-![spotify-6.png](screenshots%2Fspotify-6.png)
-
-- Create new playlist
-
-![spotify-7.png](screenshots%2Fspotify-7.png)
-
-- Here's the empty playlist created from the above command line
-
-![spotify-8-playlist.png](screenshots%2Fspotify-8-playlist.png)
-
-- Add songs from Day List playlist to the playlist I've just created.
-
-![spotify-9.png](screenshots%2Fspotify-9.png)
-
-- Here's what the playlist looks like after addings songs from Day List
-
-![spotify-9-playlist.png](screenshots%2Fspotify-9-playlist.png)
-
-- Here's the playlist automated by this Spotify Playlist Management CLI took with scheduled task using Crontab, which is updated with songs from Day List every 3 hours.
-
-![spotify-result.png](screenshots%2Fspotify-result.png)
+### Notes
+- Playlist references can be a name, URL, ID, or URI.
+- Playlist names are cached in `~/.spotify/playlists` to allow name-based lookups.
+- If a playlist name is not found in the cache, the CLI will query Spotify to refresh the cache.
+- Automatic playlist updates using crontab are optional and can be configured by the user.
