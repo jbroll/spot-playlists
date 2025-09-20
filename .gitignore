@@ -1,5 +1,13 @@
-__pycache__/
+.*.swp
+
 .idea/
-venv/
 .DS_Store
 .cache
+
+pyvenv.cfg
+venv/
+bin/
+include/
+lib64/
+lib/
+__pycache__/
