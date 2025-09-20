@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import os
 import sys
-import re
 import csv
+import re
 from pathlib import Path
 import argparse
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from typing import List, Dict
 
-# --- Auth ---
+# ------------------ Auth ------------------
 os.environ["SPOTIPY_REDIRECT_URI"] = "http://127.0.0.1:8888/callback/"
 scope = [
     "user-library-read",
@@ -22,20 +22,22 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
 CACHE_FILE = Path.home() / ".spotify/playlists"
 
-# --- Utilities ---
+# ------------------ Utilities ------------------
 def print_tsv(rows: List[Dict[str, str]], headers: List[str]):
     print("\t".join(headers))
     for row in rows:
         print("\t".join(str(row.get(h, "")) for h in headers))
 
 def parse_stdin_table() -> List[Dict[str, str]]:
-    lines = [l.strip() for l in sys.stdin if l.strip()]
+    lines = [l.rstrip("\n") for l in sys.stdin if l.strip()]
     if not lines:
-        return []
-    headers = lines[0].split("\t")
+        raise ValueError("No input received on stdin for '-' song argument")
+    headers = [h.strip().lower() for h in lines[0].split("\t")]
     rows = []
     for line in lines[1:]:
         values = line.split("\t")
+        if len(values) != len(headers):
+            raise ValueError(f"Invalid row: {line}")
         rows.append(dict(zip(headers, values)))
     return rows
 
@@ -49,7 +51,27 @@ def parse_song_arg(song: str) -> Dict[str, str]:
         return {"artist": artist.strip(), "title": title.strip()}
     return {"artist": "", "title": song.strip()}
 
-# --- Playlist resolution & caching ---
+def normalize_songs_arg(songs: List[str]) -> List[Dict[str,str]]:
+    rows = []
+    if songs == ["-"]:
+        table = parse_stdin_table()
+        if not table:
+            return []
+        headers = [h.lower() for h in table[0].keys()]
+        if headers == ["url"]:
+            for r in table:
+                rows.append({"url": r["url"].strip()})
+        elif headers == ["artist","title"]:
+            for r in table:
+                rows.append({"artist": r["artist"].strip(), "title": r["title"].strip()})
+        else:
+            raise ValueError(f"Unexpected stdin table headers: {headers}")
+    else:
+        for s in songs:
+            rows.append(parse_song_arg(s))
+    return rows
+
+# ------------------ Playlist Cache ------------------
 def is_playlist_id(ref: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9]{22}", ref))
 
@@ -60,8 +82,12 @@ def is_playlist_uri(ref: str) -> bool:
     return ref.startswith("spotify:playlist:")
 
 def save_playlist_cache(playlists: List[Dict[str,str]]):
-    # Ensure parent directory exists
-    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if CACHE_FILE.parent.exists():
+        if not CACHE_FILE.parent.is_dir():
+            raise RuntimeError(f"{CACHE_FILE.parent} exists but is not a directory")
+    else:
+        CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+
     with open(CACHE_FILE, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["id","name","url"], delimiter="\t")
         writer.writeheader()
@@ -102,7 +128,6 @@ def resolve_playlist_ref(ref: str) -> str:
         return ref.split("/")[-1].split("?")[0]
     if is_playlist_uri(ref):
         return ref.split(":")[-1]
-    # treat as name
     lookup = load_playlist_cache()
     if ref in lookup:
         return lookup[ref]
@@ -119,7 +144,7 @@ def search_track(artist: str, title: str) -> str:
         return items[0]["external_urls"]["spotify"]
     return ""
 
-# --- Commands ---
+# ------------------ Commands ------------------
 def cmd_user_info(_args):
     user = sp.current_user()
     rows = [{"id": user["id"], "name": user.get("display_name",""), "followers": user["followers"]["total"]}]
@@ -132,29 +157,23 @@ def cmd_playlists_list(_args):
 
 def cmd_playlists_create(args):
     user = sp.current_user()
-    # Load current playlists (cache or fetch)
     current_playlists = load_playlist_cache()
     if args.name in current_playlists:
         print(f"Playlist '{args.name}' already exists. Choose a different name.", file=sys.stderr)
         return
-
     new_pl = sp.user_playlist_create(
         user=user["id"],
         name=args.name,
         public=not args.private,
         description=args.description or ""
     )
-
-    # Update cache
     current_playlists[new_pl["name"]] = new_pl["id"]
     save_playlist_cache([
         {"id": pid, "name": name, "url": f"https://open.spotify.com/playlist/{pid}"}
         for name, pid in current_playlists.items()
     ])
-
-    # Output created playlist
     rows = [{"id": new_pl["id"], "name": new_pl["name"], "url": new_pl["external_urls"]["spotify"]}]
-    print_tsv(rows, ["id", "name", "url"])
+    print_tsv(rows, ["id","name","url"])
 
 def cmd_playlists_tracks(args):
     playlist_id = resolve_playlist_ref(args.playlist)
@@ -167,101 +186,90 @@ def cmd_playlists_tracks(args):
 
 def cmd_playlists_add(args):
     playlist_id = resolve_playlist_ref(args.playlist)
+    track_rows = normalize_songs_arg(args.songs)
     track_urls = []
-    for song in args.songs:
-        parsed = parse_song_arg(song)
-        if parsed.get("url") == "-":
-            rows = parse_stdin_table()
-            for r in rows:
-                url = r.get("url","").strip()
-                if url: track_urls.append(url)
-        elif parsed.get("url"):
-            track_urls.append(parsed["url"])
+    for row in track_rows:
+        if row.get("url") and row["url"] != "-":
+            track_urls.append(row["url"])
         else:
-            url = search_track(parsed["artist"], parsed["title"])
-            if url: track_urls.append(url)
+            url = search_track(row["artist"], row["title"])
+            if url:
+                track_urls.append(url)
     if track_urls:
         sp.playlist_add_items(playlist_id, track_urls)
         print_tsv([{"url": u} for u in track_urls], ["url"])
 
 def cmd_playlists_remove(args):
     playlist_id = resolve_playlist_ref(args.playlist)
+    track_rows = normalize_songs_arg(args.songs)
     track_urls = []
-    for song in args.songs:
-        parsed = parse_song_arg(song)
-        if parsed.get("url") == "-":
-            rows = parse_stdin_table()
-            for r in rows:
-                url = r.get("url","").strip()
-                if url: track_urls.append(url)
-        elif parsed.get("url"):
-            track_urls.append(parsed["url"])
+    for row in track_rows:
+        if row.get("url") and row["url"] != "-":
+            track_urls.append(row["url"])
         else:
-            url = search_track(parsed["artist"], parsed["title"])
-            if url: track_urls.append(url)
+            url = search_track(row["artist"], row["title"])
+            if url:
+                track_urls.append(url)
     if track_urls:
         sp.playlist_remove_all_occurrences_of_items(playlist_id, track_urls)
         print_tsv([{"url": u} for u in track_urls], ["url"])
 
 def cmd_search(args):
-    track_urls = []
-    for song in args.songs:
-        parsed = parse_song_arg(song)
-        if parsed.get("url") == "-":
-            rows = parse_stdin_table()
-            for r in rows:
-                artist = r.get("artist","")
-                title = r.get("title","")
-                if title:
-                    url = search_track(artist,title)
-                    if url: track_urls.append({"url":url})
-        elif parsed.get("url"):
-            track_urls.append({"url": parsed["url"]})
+    track_rows = normalize_songs_arg(args.songs)
+    results = []
+    for row in track_rows:
+        if row.get("url") and row["url"] != "-":
+            results.append({"url": row["url"]})
         else:
-            url = search_track(parsed["artist"], parsed["title"])
-            if url: track_urls.append({"url":url})
-    print_tsv(track_urls, ["url"])
+            url = search_track(row["artist"], row["title"])
+            if url:
+                results.append({"url": url})
+    print_tsv(results, ["url"])
 
-# --- CLI Parser ---
+# ------------------ CLI Parser ------------------
 def main():
     parser = argparse.ArgumentParser(prog="spotify-cli")
-    subparsers = parser.add_subparsers(dest="command")
+    parser.set_defaults(func=lambda args: parser.print_help())
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
     # user
-    user_parser = subparsers.add_parser("user")
-    user_sub = user_parser.add_subparsers(dest="subcommand")
-    user_sub.add_parser("info").set_defaults(func=cmd_user_info)
+    user_parser = subparsers.add_parser("user", help="User information commands")
+    user_parser.set_defaults(func=lambda args: user_parser.print_help())
+    user_sub = user_parser.add_subparsers(dest="subcommand", required=True)
+    user_sub.add_parser("info", help="Show current user info").set_defaults(func=cmd_user_info)
 
     # playlists
-    pl_parser = subparsers.add_parser("playlists")
-    pl_sub = pl_parser.add_subparsers(dest="subcommand")
-    pl_sub.add_parser("list").set_defaults(func=cmd_playlists_list)
-    create_parser = pl_sub.add_parser("create")
-    create_parser.add_argument("name")
-    create_parser.add_argument("--description")
-    create_parser.add_argument("--private", action="store_true")
-    create_parser.set_defaults(func=cmd_playlists_create)
-    tracks_parser = pl_sub.add_parser("tracks")
-    tracks_parser.add_argument("playlist")
-    tracks_parser.set_defaults(func=cmd_playlists_tracks)
-    add_parser = pl_sub.add_parser("add")
-    add_parser.add_argument("playlist")
-    add_parser.add_argument("songs", nargs="+")
-    add_parser.set_defaults(func=cmd_playlists_add)
-    remove_parser = pl_sub.add_parser("remove")
-    remove_parser.add_argument("playlist")
-    remove_parser.add_argument("songs", nargs="+")
-    remove_parser.set_defaults(func=cmd_playlists_remove)
+    pl_parser = subparsers.add_parser("playlists", help="Playlist management commands")
+    pl_parser.set_defaults(func=lambda args: pl_parser.print_help())
+    pl_sub = pl_parser.add_subparsers(dest="subcommand", required=True)
+    pl_sub.add_parser("list", help="List all playlists").set_defaults(func=cmd_playlists_list)
+
+    create_p = pl_sub.add_parser("create", help="Create a playlist")
+    create_p.add_argument("name", help="Name of the new playlist")
+    create_p.add_argument("-d","--description", help="Playlist description")
+    create_p.add_argument("-p","--private", action="store_true", help="Create as private playlist")
+    create_p.set_defaults(func=cmd_playlists_create)
+
+    tracks_p = pl_sub.add_parser("tracks", help="Show tracks in a playlist")
+    tracks_p.add_argument("playlist", help="Playlist name or ID or URL")
+    tracks_p.set_defaults(func=cmd_playlists_tracks)
+
+    add_p = pl_sub.add_parser("add", help="Add tracks to a playlist")
+    add_p.add_argument("playlist", help="Playlist name or ID or URL")
+    add_p.add_argument("songs", nargs="+", help="Tracks to add, or '-' for stdin table")
+    add_p.set_defaults(func=cmd_playlists_add)
+
+    remove_p = pl_sub.add_parser("remove", help="Remove tracks from a playlist")
+    remove_p.add_argument("playlist", help="Playlist name or ID or URL")
+    remove_p.add_argument("songs", nargs="+", help="Tracks to remove, or '-' for stdin table")
+    remove_p.set_defaults(func=cmd_playlists_remove)
 
     # search
-    search_parser = subparsers.add_parser("search")
-    search_parser.add_argument("songs", nargs="+")
-    search_parser.set_defaults(func=cmd_search)
+    search_p = subparsers.add_parser("search", help="Search tracks by artist/title")
+    search_p.add_argument("songs", nargs="+", help="Tracks to search, or '-' for stdin table")
+    search_p.set_defaults(func=cmd_search)
 
     args = parser.parse_args()
-    if not args.command or not hasattr(args,"func"):
-        parser.print_help()
-        sys.exit(1)
     args.func(args)
 
 if __name__ == "__main__":
